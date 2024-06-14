@@ -16,9 +16,12 @@ return new class extends Migration
             $table->string('firstname');
             $table->string('lastname');
             $table->string('email')->unique();
+            $table->string('phone_no')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->string('referral_code');
+            $table->string('referral_code')->nullable();
+            $table->unsignedBigInteger('referred_by')->nullable();
+            $table->foreign('referred_by')->references('id')->on('users')->onDelete('set null');
             $table->rememberToken();
             $table->timestamps();
         });
