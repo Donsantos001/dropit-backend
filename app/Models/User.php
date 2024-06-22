@@ -67,4 +67,36 @@ class User extends Authenticatable
     {
         return $this->hasMany(User::class, 'referred_by');
     }
+
+    /**
+     * Get the users orders.
+     */
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'user_id');
+    }
+
+    /**
+     * Get the users orders.
+     */
+    public function shipments(): HasMany
+    {
+        return $this->hasMany(Shipment::class, 'agent_id');
+    }
+
+    /**
+     * Get the users referred by this.
+     */
+    public function recipients(): HasMany
+    {
+        return $this->hasMany(Recipient::class, 'user_id');
+    }
+
+    /**
+     * Get the users orders.
+     */
+    public function shipment_requests(): HasMany
+    {
+        return $this->hasMany(ShipmentRequest::class, 'agent_id');
+    }
 }
