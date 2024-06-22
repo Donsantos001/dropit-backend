@@ -17,7 +17,7 @@ fi
 # composer install --no-dev --working-dir=/var/www/html
 
 echo "Migrating"
-yes | php artisan migrate
+php artisan migrate --force
 
 echo "Generating key"
 php artisan key:generate
