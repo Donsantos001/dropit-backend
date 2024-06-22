@@ -19,7 +19,7 @@ class UserController extends Controller
     /**
      * Get the referred users User
      *
-     * @return [json] user object
+     * @return [json] user object list
      */
     public function referred_users(Request $request)
     {

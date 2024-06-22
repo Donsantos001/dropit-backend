@@ -6,10 +6,15 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Models\User;
+use App\Traits\Verification;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class RegisterController extends Controller
 {
+
+    use Verification;
+
     /**
      * Create user
      *
@@ -20,7 +25,7 @@ class RegisterController extends Controller
      */
     public function register(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'firstname' => 'required|string',
             'lastname' => 'required|string',
             'email' => 'required|string|unique:users',
@@ -29,14 +34,10 @@ class RegisterController extends Controller
             'referred_by' => 'string|nullable',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()]);
-        }
-
         $referral_code = $this->generateReferralCode();
         $referredby = null;
-        if ($request->filled('referral_by')) {
-            $referredby = User::where('referral_by', $request->referral_code)->first()->id;
+        if ($request->referred_by) {
+            $referredby = User::where('referral_code', $request->referred_by)->first()->id;
         }
 
         $user = new User([
@@ -50,16 +51,37 @@ class RegisterController extends Controller
         ]);
 
         if ($user->save()) {
-            $tokenResult = $user->createToken('Personal Access Token', ['*'], now()->addDays(2));
-            $token = $tokenResult->plainTextToken;
+            $this->createOTP($request);
 
             return response()->json([
-                'message' => 'Successfully created user!',
-                'accessToken' => $token,
+                'message' => 'User created successfully',
+                'info' => 'OTP is sent and will expire in 5 minutes',
+                'verified' => false,
             ], 201);
-        } else {
-            return response()->json(['error' => 'Provide proper details']);
         }
+
+        return response()->json(['error' => 'Provide proper details']);
+    }
+
+    /**
+     * Resend OTP
+     *
+     * @param  [string] email
+     * @param  [string] token
+     */
+    public function sendOTP(Request $request)
+    {
+        $user = User::where('email', $request->email)->first();
+        if (!$user) {
+            return response()->json(['error' => 'Email does not exist'], 422);
+        }
+        if ($user->email_verified_at) {
+            return response()->json(['error' => 'Email already verified'], 422);
+        }
+        $this->createOTP($request);
+        return response()->json([
+            'OTP is sent'
+        ]);
     }
 
     /**
