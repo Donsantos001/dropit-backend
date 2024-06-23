@@ -24,16 +24,16 @@ use App\Http\Controllers\UserController;
 Route::group(['prefix' => 'auth'], function () {
     Route::post('login', [LoginController::class, 'login']);
     Route::post('register', [RegisterController::class, 'register']);
-    Route::post('sendotp', [RegisterController::class, 'sendOTP']);
-    Route::post('verifyotp', [RegisterController::class, 'verifyOTP']);
 
     Route::group(['middleware' => 'auth:sanctum'], function () {
         Route::post('logout', [LogoutController::class, 'logout']);
         Route::get('user', [UserController::class, 'user']);
+        Route::post('sendotp', [RegisterController::class, 'sendOTP']);
+        Route::post('verifyotp', [RegisterController::class, 'verifyOTP']);
     });
 });
 
-Route::group(['middleware' => 'auth:sanctum'], function () {
+Route::middleware(['auth:sanctum', 'email-verified'])->group(function () {
     // referral
     Route::get('user/referrals', [UserController::class, 'referred_users']);
     Route::get('user/referred_by', [UserController::class, 'referrer']);

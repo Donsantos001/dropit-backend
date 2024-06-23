@@ -31,21 +31,11 @@ class LoginController extends Controller
         $credentials = request(['email', 'password']);
         if (!Auth::attempt($credentials)) {
             return response()->json([
-                'message' => 'Unauthorized'
+                'message' => 'Invalid credentials'
             ], 401);
         }
 
         $user = $request->user();
-
-        if (!$user->email_verified_at) {
-            $this->createOTP($request);
-
-            return response()->json([
-                'message' => 'User logged in',
-                'info' => 'OTP is sent and will expire in 5 minutes',
-                'verified' => false,
-            ], 201);
-        }
 
         $request->user()->tokens()->where('name', 'Personal Access Token')->delete();
         $tokenResult = $user->createToken('Personal Access Token', ['*'], now()->addDays(2));
@@ -55,7 +45,7 @@ class LoginController extends Controller
             'message' => 'Log in successful',
             'accessToken' => $token,
             'token_type' => 'Bearer',
-            'verified' => true
+            'verified' => !!$user->email_verified_at
         ]);
     }
 }

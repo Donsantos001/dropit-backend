@@ -18,9 +18,10 @@ trait Verification
      * @param  [string] email
      * @param  [string] token
      */
-    public function createOTP(Request $request)
+    public function createOTP(User $user)
     {
-        $otp = rand(100000, 999999);
+        $otp = 111111;
+        // $otp = rand(100000, 999999);
 
         // Send otp through remote service
         try {
@@ -32,7 +33,7 @@ trait Verification
         }
 
         DB::table('email_verification_tokens')->updateOrInsert(
-            ['email' => $request->email],
+            ['email' => $user->email],
             ['otp' => $otp, 'created_at' => now()]
         );
     }
@@ -46,11 +47,17 @@ trait Verification
     public function verifyOTP(Request $request)
     {
         $request->validate([
-            'email' => 'required|string',
             'otp' => 'required|numeric:6',
         ]);
 
-        $record = DB::table('email_verification_tokens')->where('email', $request->email)->where('otp', $request->otp);
+        $user = $request->user();
+        if (!$user) {
+            return response()->json([
+                'message' => 'Unauthorized'
+            ], 401);
+        }
+
+        $record = DB::table('email_verification_tokens')->where('email', $user->email)->where('otp', $request->otp);
         $verification = $record->first();
         if (!$verification) {
             return response()->json([
@@ -65,11 +72,8 @@ trait Verification
         }
 
         $record->delete();
-        $user = User::where('email', $request->email)->first();
         $user->email_verified_at = now();
         $user->save();
-        $tokenResult = $user->createToken('Personal Access Token', ['*'], now()->addDays(2));
-        $token = $tokenResult->plainTextToken;
 
         // Send success through remote service
         try {
@@ -82,8 +86,7 @@ trait Verification
         }
 
         return response()->json([
-            'message' => 'Successfully verified user!',
-            'accessToken' => $token,
+            'message' => 'Email verified successfully',
             'verified' => true,
         ]);
     }

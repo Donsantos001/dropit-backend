@@ -50,12 +50,14 @@ class RegisterController extends Controller
             'password' => bcrypt($request->password),
         ]);
 
+
         if ($user->save()) {
-            $this->createOTP($request);
+            $tokenResult = $user->createToken('Personal Access Token', ['*'], now()->addDays(2));
+            $token = $tokenResult->plainTextToken;
 
             return response()->json([
                 'message' => 'User created successfully',
-                'info' => 'OTP is sent and will expire in 5 minutes',
+                'accessToken' => $token,
                 'verified' => false,
             ], 201);
         }
@@ -71,14 +73,14 @@ class RegisterController extends Controller
      */
     public function sendOTP(Request $request)
     {
-        $user = User::where('email', $request->email)->first();
+        $user = $request->user();
         if (!$user) {
-            return response()->json(['error' => 'Email does not exist'], 422);
+            return response()->json(['error' => 'Unauthorized'], 401);
         }
         if ($user->email_verified_at) {
             return response()->json(['error' => 'Email already verified'], 422);
         }
-        $this->createOTP($request);
+        $this->createOTP($user);
         return response()->json([
             'OTP is sent'
         ]);
