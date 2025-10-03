@@ -3,17 +3,36 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\RegisterRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Models\User;
 use App\Traits\Verification;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
+use Exception;
+use Illuminate\Database\ConnectionInterface;
+use Illuminate\Hashing\HashManager;
+use MarcinOrlowski\ResponseBuilder\ResponseBuilder;
 
 class RegisterController extends Controller
 {
 
     use Verification;
+
+    private ConnectionInterface $db;
+
+    private User $user;
+
+    private HashManager $hash;
+
+    /**
+     * Inject models into the constructor.
+     */
+    public function __construct(ConnectionInterface $db, User $user, HashManager $hash)
+    {
+        $this->db = $db;
+        $this->user = $user;
+        $this->hash = $hash;
+    }
 
     /**
      * Create user
@@ -23,16 +42,9 @@ class RegisterController extends Controller
      * @param  [string] password
      * @return [string] message
      */
-    public function register(Request $request)
+    public function register(RegisterRequest $request)
     {
-        $request->validate([
-            'firstname' => 'required|string',
-            'lastname' => 'required|string',
-            'email' => 'required|string|unique:users',
-            'phone_no' => 'required|string|unique:users',
-            'password' => 'required|string',
-            'referred_by' => 'string|nullable',
-        ]);
+        $this->db->beginTransaction();
 
         $referral_code = $this->generateReferralCode();
         $referredby = null;
@@ -40,27 +52,27 @@ class RegisterController extends Controller
             $referredby = User::where('referral_code', $request->referred_by)->first()->id;
         }
 
-        $user = new User([
-            'firstname'  => $request->firstname,
-            'lastname'  => $request->lastname,
-            'email' => $request->email,
-            'phone_no' => $request->phone_no,
-            'referred_by' => $referredby,
-            'referral_code' => $referral_code,
-            'password' => bcrypt($request->password),
-        ]);
 
-        if ($user->save()) {
-            $this->createOTP($request);
+        $user = new $this->user();
+        $user->first_name = $request->first_name;
+        $user->last_name = $request->last_name;
+        $user->email = $request->email;
+        $user->phone_number = $request->phone_number;
+        $user->referred_by = $referred_by->id ?? null;
+        $user->referral_code = $referral_code;
+        $user->password = $this->hash->make($request->password);
+        $user->save();
 
-            return response()->json([
-                'message' => 'User created successfully',
-                'info' => 'OTP is sent and will expire in 5 minutes',
-                'verified' => false,
-            ], 201);
-        }
+        // $tokenResult = $user->createToken('Personal Access Token', ['*'], now()->addDays(2));
+        // $token = $tokenResult->plainTextToken;
 
-        return response()->json(['error' => 'Provide proper details']);
+        $this->db->commit();
+        $this->createOTP($request);
+
+        return ResponseBuilder::asSuccess()
+            ->withData(['user' => $user, 'verified' => false,])
+            ->withMessage('Registered successfully.')
+            ->build();
     }
 
     /**
@@ -78,7 +90,14 @@ class RegisterController extends Controller
         if ($user->email_verified_at) {
             return response()->json(['error' => 'Email already verified'], 422);
         }
-        $this->createOTP($request);
+
+        try {
+            $this->createOTP($request);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Unable to send otp, try again'
+            ], 401);
+        }
         return response()->json([
             'OTP is sent'
         ]);

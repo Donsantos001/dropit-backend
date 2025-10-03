@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::create('recipients', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id')->nullable();
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->string('firstname');
             $table->string('lastname');
@@ -21,6 +20,8 @@ return new class extends Migration
             $table->string('email');
             $table->string('address');
             $table->timestamps();
+            
+            $table->uuid('user_id')->nullable();
         });
     }
 

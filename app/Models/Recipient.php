@@ -16,13 +16,13 @@ class Recipient extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [
-        'firstname',
-        'lastname',
-        'phone_no',
-        'email',
-        'address',
-    ];
+    // protected $fillable = [
+    //     'firstname',
+    //     'lastname',
+    //     'phone_no',
+    //     'email',
+    //     'address',
+    // ];
 
     /**
      * Get the user that referred this.

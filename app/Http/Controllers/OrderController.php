@@ -2,13 +2,29 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\OrderStoreRequest;
 use App\Models\Order;
 use App\Models\Shipment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use MarcinOrlowski\ResponseBuilder\ResponseBuilder;
 
 class OrderController extends Controller
 {
+
+    protected Order $order;
+
+
+    /**
+     * Inject the Order model into the controller.
+     *
+     * @param Order $order
+     */
+    public function __construct(Order $order)
+    {
+        $this->order = $order;
+    }
+
     /**
      * return the list of orders for a particular user
      * 
@@ -17,7 +33,10 @@ class OrderController extends Controller
     public function list(Request $request)
     {
         $user = $request->user();
-        return response()->json($user->orders()->with('shipment')->get());
+        $orders = $user->orders()->with('shipment')->get();
+        return ResponseBuilder::asSuccess()
+            ->withData(['orders' => $orders])
+            ->build();
     }
 
     /**
@@ -25,45 +44,33 @@ class OrderController extends Controller
      * 
      * @return [json] order object list
      */
-    public function store(Request $request)
+    public function store(OrderStoreRequest $request)
     {
-        $user = $request->user();
+        $order = new $this->order();
+        $order->item_name = $request->item_name;
+        $order->receiver_firstname = $request->receiver_firstname;
+        $order->receiver_lastname = $request->receiver_lastname;
+        $order->receiver_phone_no = $request->receiver_phone_no;
+        $order->receiver_email = $request->receiver_email;
+        $order->delivery_address = $request->delivery_address;
+        $order->pickup_address = $request->pickup_address;
+        $order->payment_method = $request->payment_method;
+        $order->preferred_vehicle = $request->preferred_vehicle;
+        $order->schedule_type = $request->schedule_type;
+        $order->schedule_time = $request->schedule_time ?  $request->schedule_time : null;
+        $order->status = 'pending';
+        $order->user_id = $request->user()->id;
+        $order->save();
 
-        $request->validate([
-            'item_name' => 'required|string',
-            'receiver_firstname' => 'required|string',
-            'receiver_lastname' => 'required|string',
-            'receiver_phone_no' => 'required|string',
-            'receiver_email' => 'required|string',
-            'delivery_address' => 'required|string',
-            'pickup_address' => 'required|string',
-            'payment_method' => 'required|string|in:cash,paystack',
-            'preferred_vehicle' => 'required|string|in:bike,car,lorry,truck',
-            'schedule_type' => 'required|string|in:now,later',
-            'schedule_time' => 'nullable|date_format:Y-m-d H:i:s',
-        ]);
+        $shipment = new Shipment();
+        $shipment->current_location = $request->pickup_address;
+        $shipment->order_id = $order->id;
+        $shipment->save();
 
-        $order = $user->orders()->create([
-            'status' => 'pending',
-            ...($request->only([
-                'item_name',
-                'receiver_firstname',
-                'receiver_lastname',
-                'receiver_phone_no',
-                'receiver_email',
-                'delivery_address',
-                'pickup_address',
-                'payment_method',
-                'preferred_vehicle',
-                'schedule_time',
-            ])),
-        ]);
-
-        $order->shipment()->create([
-            'current_location' => $request->pickup_address,
-        ]);
-
-        return response()->json($order, 201);
+        return ResponseBuilder::asSuccess()
+            ->withData(['order' => $order])
+            ->withMessage('Order created successfully.')
+            ->build();
     }
 
     /**
@@ -71,16 +78,17 @@ class OrderController extends Controller
      * 
      * @return [json] order object list
      */
-    public function cancel(Request $request)
+    public function cancel(Request $request, Order $order)
     {
-        $order = $request->user()->orders()->find($request->order_id);
-        if (!$order) {
-            return response()->json(['error' => 'Order not found'], 404);
-        }
         if ($order->status === "progress") {
-            return response()->json(['error' => 'Order is in progress, cannot be cancelled']);
+            return ResponseBuilder::asError(422)
+                ->withMessage('Order is in progress, cannot be cancelled')
+                ->build();
         }
         $order->update(['status' => 'cancelled']);
-        return response()->json($order, 200);
+        return ResponseBuilder::asSuccess()
+            ->withData(['order' => $order])
+            ->withMessage('Order cancelled successfully.')
+            ->build();
     }
 }

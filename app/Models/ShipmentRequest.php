@@ -15,12 +15,12 @@ class ShipmentRequest extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [
-        'agent_id',
-        'shipment_id',
-        'active',
-        'price',
-    ];
+    // protected $fillable = [
+    //     'agent_id',
+    //     'shipment_id',
+    //     'active',
+    //     'price',
+    // ];
 
 
     /**

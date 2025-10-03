@@ -13,21 +13,27 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id')->nullable();
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->uuid('user_id')->nullable();
             $table->string('item_name');
+
+
+            // Receiver details
             $table->string('receiver_firstname');
             $table->string('receiver_lastname');
             $table->string('receiver_phone_no');
             $table->string('receiver_email');
             $table->string('delivery_address');
+
             $table->string('pickup_address');
+
             $table->string('status')->default('pending');
             $table->string('payment_method');
             $table->string('preferred_vehicle');
             $table->string('schedule_type')->default('now');
             $table->timestamp('schedule_time')->nullable()->default(now());
             $table->timestamps();
+            
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 

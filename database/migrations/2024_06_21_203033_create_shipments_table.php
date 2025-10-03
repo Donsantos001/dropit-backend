@@ -14,13 +14,14 @@ return new class extends Migration
         Schema::create('shipments', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('order_id')->nullable();
-            $table->foreign('order_id')->references('id')->on('orders')->onDelete('set null');
-            $table->unsignedBigInteger('agent_id')->nullable();
-            $table->foreign('agent_id')->references('id')->on('users')->onDelete('set null');
+            $table->uuid('agent_id')->nullable();
             $table->string('current_location');
             $table->decimal('price')->nullable();
             $table->boolean('paid')->default(false);
             $table->timestamps();
+
+            $table->foreign('order_id')->references('id')->on('orders')->onDelete('set null');
+            $table->foreign('agent_id')->references('id')->on('users')->onDelete('set null');
         });
     }
 

@@ -13,13 +13,14 @@ return new class extends Migration
     {
         Schema::create('shipment_requests', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('agent_id')->nullable();
-            $table->foreign('agent_id')->references('id')->on('users')->onDelete('cascade');
+            $table->uuid('agent_id')->nullable();
             $table->unsignedBigInteger('shipment_id');
-            $table->foreign('shipment_id')->references('id')->on('shipments')->onDelete('cascade');
             $table->boolean('active')->default(true);
             $table->decimal('price');
             $table->timestamps();
+
+            $table->foreign('agent_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('shipment_id')->references('id')->on('shipments')->onDelete('cascade');
         });
     }
 

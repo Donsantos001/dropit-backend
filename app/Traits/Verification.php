@@ -9,6 +9,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use MarcinOrlowski\ResponseBuilder\ResponseBuilder;
 
 trait Verification
 {
@@ -23,13 +24,7 @@ trait Verification
         $otp = rand(100000, 999999);
 
         // Send otp through remote service
-        try {
-            Mail::to('santosdboss@gmail.com')->send(new VerificationMail($otp));
-        } catch (Exception $e) {
-            response()->json([
-                'message' => 'Unable to send otp, try again'
-            ], 401);
-        }
+        Mail::to('santosdboss@gmail.com')->send(new VerificationMail($otp));
 
         DB::table('email_verification_tokens')->updateOrInsert(
             ['email' => $request->email],
@@ -68,7 +63,7 @@ trait Verification
         $user = User::where('email', $request->email)->first();
         $user->email_verified_at = now();
         $user->save();
-        $tokenResult = $user->createToken('Personal Access Token', ['*'], now()->addDays(2));
+        $tokenResult = $user->createToken($request->get('device_name', 'accessToken'), ['*'], now()->addDays(2));
         $token = $tokenResult->plainTextToken;
 
         // Send success through remote service
@@ -81,10 +76,14 @@ trait Verification
             ]);
         }
 
-        return response()->json([
-            'message' => 'Successfully verified user!',
-            'accessToken' => $token,
-            'verified' => true,
-        ]);
+        return ResponseBuilder::asSuccess()
+            ->withData([
+                'user' => $user,
+                'accessToken' => $token,
+                'token_type' => 'Bearer',
+                'verified' => true,
+            ])
+            ->withMessage('Successfully verified user!')
+            ->build();
     }
 }

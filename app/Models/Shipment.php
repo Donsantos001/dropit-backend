@@ -16,11 +16,11 @@ class Shipment extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [
-        'price',
-        'paid',
-        'current_location',
-    ];
+    // protected $fillable = [
+    //     'price',
+    //     'paid',
+    //     'current_location',
+    // ];
 
     /**
      * Get the user that owns this.

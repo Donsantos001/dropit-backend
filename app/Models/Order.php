@@ -16,20 +16,20 @@ class Order extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [
-        'item_name',
-        'receiver_firstname',
-        'receiver_lastname',
-        'receiver_phone_no',
-        'receiver_email',
-        'delivery_address',
-        'pickup_address',
-        'status',
-        'payment_method',
-        'preferred_vehicle',
-        'schedule_type',
-        'schedule_time'
-    ];
+    // protected $fillable = [
+    //     'item_name',
+    //     'receiver_firstname',
+    //     'receiver_lastname',
+    //     'receiver_phone_no',
+    //     'receiver_email',
+    //     'delivery_address',
+    //     'pickup_address',
+    //     'status',
+    //     'payment_method',
+    //     'preferred_vehicle',
+    //     'schedule_type',
+    //     'schedule_time'
+    // ];
 
 
     /**
