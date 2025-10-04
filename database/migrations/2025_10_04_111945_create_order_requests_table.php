@@ -11,17 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('recipients', function (Blueprint $table) {
+        Schema::create('order_requests', function (Blueprint $table) {
             $table->id();
-            $table->uuid('user_id')->nullable();
-            $table->string('first_name');
-            $table->string('last_name');
-            $table->string('phone_number');
-            $table->string('email');
-            $table->string('address');
+            $table->uuid('user_id');
+            $table->unsignedBigInteger('order_id');
+            // requested, accepted, rejected
+            $table->string('status')->default("requested");
+            $table->longText('message')->nullable();
             $table->timestamps();
-            
+
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
         });
     }
 
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('recipients');
+        Schema::dropIfExists('order_requests');
     }
 };

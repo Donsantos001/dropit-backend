@@ -11,16 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('recipients', function (Blueprint $table) {
+        Schema::create('locations', function (Blueprint $table) {
             $table->id();
+
             $table->uuid('user_id')->nullable();
-            $table->string('first_name');
-            $table->string('last_name');
-            $table->string('phone_number');
-            $table->string('email');
+            $table->string('latitude');
+            $table->string('longitude');
             $table->string('address');
+            $table->string('state');
+            $table->string('country');
             $table->timestamps();
-            
+
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
@@ -30,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('recipients');
+        Schema::dropIfExists('locations');
     }
 };

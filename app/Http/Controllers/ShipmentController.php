@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ShipmentStatus;
 use App\Models\Shipment;
 use App\Models\ShipmentRequest;
 use Illuminate\Http\Request;
+use MarcinOrlowski\ResponseBuilder\ResponseBuilder;
 
 class ShipmentController extends Controller
 {
@@ -16,7 +18,11 @@ class ShipmentController extends Controller
     public function shipment_list(Request $request)
     {
         $user = $request->user();
-        return response()->json($user->shipments()->with('order')->get());
+        $shipments = $user->shipments()->with('order')->get();
+
+        return ResponseBuilder::asSuccess()
+            ->withData(['shipments' => $shipments])
+            ->build();
     }
 
     /**
@@ -27,20 +33,24 @@ class ShipmentController extends Controller
     public function shipment_status(Request $request)
     {
         $request->validate([
-            'status' => 'string|required|in:progress,completed'
+            'status' => 'string|required|in:' . ShipmentStatus::IN_TRANSIT . ',' . ShipmentStatus::DELIVERED,
         ]);
-        $user = $request->user();
-        $shipment = Shipment::where('id', $request->shipment_id)->where('agent_id', $request->user()->id)->first();
+        $shipment = $request->user()->shipments()->where('id', $request->shipment_id)->first();
         if (!$shipment) {
-            return response()->json(['error' => 'Shipment not found'], 404);
+            return ResponseBuilder::asError(404)
+                ->withMessage('Shipment not found')
+                ->build();
         }
 
         $shipment->order->update(['status' => $request->status]);
-        return response()->json($shipment);
+        return ResponseBuilder::asSuccess()
+            ->withData(['shipment' => $shipment])
+            ->withMessage('Shipment status updated successfully')
+            ->build();
     }
 
     /**
-     * get open shipments
+     * get list of open shipments
      * 
      * @return [json] order object list
      */

@@ -85,22 +85,26 @@ class RegisterController extends Controller
     {
         $user = User::where('email', $request->email)->first();
         if (!$user) {
-            return response()->json(['error' => 'Email does not exist'], 422);
+            return ResponseBuilder::asError(422)
+                ->withMessage('User not found')
+                ->build();
         }
         if ($user->email_verified_at) {
-            return response()->json(['error' => 'Email already verified'], 422);
+            return ResponseBuilder::asError(422)
+                ->withMessage('Email already verified')
+                ->build();
         }
 
         try {
             $this->createOTP($request);
         } catch (Exception $e) {
-            return response()->json([
-                'message' => 'Unable to send otp, try again'
-            ], 401);
+            return ResponseBuilder::asError(422)
+                ->withMessage('Unable to send otp, try again')
+                ->build();
         }
-        return response()->json([
-            'OTP is sent'
-        ]);
+        return ResponseBuilder::asSuccess()
+            ->withMessage('OTP sent successfully')
+            ->build();
     }
 
     /**

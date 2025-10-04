@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Order extends Model
@@ -46,5 +47,13 @@ class Order extends Model
     public function shipment(): HasOne
     {
         return $this->hasOne(Shipment::class, 'order_id');
+    }
+
+    /**
+     * Get the agent requested on this.
+     */
+    public function agent_requests(): HasMany
+    {
+        return $this->hasMany(AgentRequest::class, 'order_id');
     }
 }

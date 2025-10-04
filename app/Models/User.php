@@ -101,4 +101,28 @@ class User extends Authenticatable
     {
         return $this->hasMany(ShipmentRequest::class, 'agent_id');
     }
+
+    /**
+     * Get the user locations.
+     */
+    public function locations(): HasMany
+    {
+        return $this->hasMany(Location::class, 'user_id');
+    }
+
+    /**
+     * Get the user agent requests.
+     */
+    public function agent_requests(): HasMany
+    {
+        return $this->hasMany(AgentRequest::class, 'agent_id');
+    }
+
+    /**
+     * Get the user order requests.
+     */
+    public function order_requests(): HasMany
+    {
+        return $this->hasMany(OrderRequest::class, 'user_id');
+    }
 }

@@ -2,17 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OrderStatus;
 use App\Http\Requests\OrderStoreRequest;
+use App\Models\Location;
 use App\Models\Order;
-use App\Models\Shipment;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use MarcinOrlowski\ResponseBuilder\ResponseBuilder;
 
 class OrderController extends Controller
 {
 
+    protected User $user;
     protected Order $order;
+    protected Location $location;
 
 
     /**
@@ -20,7 +23,7 @@ class OrderController extends Controller
      *
      * @param Order $order
      */
-    public function __construct(Order $order)
+    public function __construct(Order $order, User $user, Location $location)
     {
         $this->order = $order;
     }
@@ -32,10 +35,29 @@ class OrderController extends Controller
      */
     public function list(Request $request)
     {
-        $user = $request->user();
-        $orders = $user->orders()->with('shipment')->get();
+        $orders = $request->user()->orders()
+            // ->with('shipment')
+            ->get();
         return ResponseBuilder::asSuccess()
             ->withData(['orders' => $orders])
+            ->build();
+    }
+
+    /** 
+     * return the data for a particular order
+     * 
+     * @param int $id
+     * @return [json] order object
+     */
+    public function show(Request $request, Order $order)
+    {
+        if ($order->user_id !== $request->user()->id) {
+            return ResponseBuilder::asError(403)
+                ->withMessage('You are not authorized to view this order')
+                ->build();
+        }
+        return ResponseBuilder::asSuccess()
+            ->withData(['order' => $order->load('shipment')])
             ->build();
     }
 
@@ -46,26 +68,50 @@ class OrderController extends Controller
      */
     public function store(OrderStoreRequest $request)
     {
+        $recipient = new $this->user();
+        $recipient->first_name = $request->receiver->first_name;
+        $recipient->last_name = $request->receiver->last_name;
+        $recipient->phone_number = $request->receiver->phone_number;
+        $recipient->email = $request->receiver->email;
+        $recipient->address = $request->receiver->address;
+        $recipient->user_id = $request->user()->id;
+        $recipient->save();
+
+        $pickup_location = new $this->location();
+        $pickup_location->address = $request->pickup->address;
+        $pickup_location->state = $request->pickup->state;
+        $pickup_location->country = $request->pickup->country;
+        $pickup_location->latitude = $request->pickup->latitude;
+        $pickup_location->longitude = $request->pickup->longitude;
+        $pickup_location->user_id = $request->user()->id;
+        $pickup_location->save();
+
+        $delivery_location = new $this->location();
+        $delivery_location->address = $request->delivery->address;
+        $delivery_location->state = $request->delivery->state;
+        $delivery_location->country = $request->delivery->country;
+        $delivery_location->latitude = $request->delivery->latitude;
+        $delivery_location->longitude = $request->delivery->longitude;
+        $delivery_location->user_id = $request->user()->id;
+        $delivery_location->save();
+
+
         $order = new $this->order();
         $order->item_name = $request->item_name;
-        $order->receiver_firstname = $request->receiver_firstname;
-        $order->receiver_lastname = $request->receiver_lastname;
-        $order->receiver_phone_no = $request->receiver_phone_no;
-        $order->receiver_email = $request->receiver_email;
-        $order->delivery_address = $request->delivery_address;
-        $order->pickup_address = $request->pickup_address;
-        $order->payment_method = $request->payment_method;
         $order->preferred_vehicle = $request->preferred_vehicle;
+        $order->status = OrderStatus::CREATED->value;
         $order->schedule_type = $request->schedule_type;
         $order->schedule_time = $request->schedule_time ?  $request->schedule_time : null;
-        $order->status = 'pending';
+
+        $order->payment_method = $request->payment_method;
+        $order->price = $request->price;
+        $order->paid = false;
+
+        $order->recipient_id = $recipient->id;
+        $order->pickup_location_id = $pickup_location->id;
+        $order->delivery_location_id = $delivery_location->id;
         $order->user_id = $request->user()->id;
         $order->save();
-
-        $shipment = new Shipment();
-        $shipment->current_location = $request->pickup_address;
-        $shipment->order_id = $order->id;
-        $shipment->save();
 
         return ResponseBuilder::asSuccess()
             ->withData(['order' => $order])
@@ -74,18 +120,18 @@ class OrderController extends Controller
     }
 
     /**
-     * invalidate order
+     * cancel order
      * 
      * @return [json] order object list
      */
     public function cancel(Request $request, Order $order)
     {
-        if ($order->status === "progress") {
+        if ($order->status === OrderStatus::PROGRESS->value) {
             return ResponseBuilder::asError(422)
                 ->withMessage('Order is in progress, cannot be cancelled')
                 ->build();
         }
-        $order->update(['status' => 'cancelled']);
+        $order->update(['status' => OrderStatus::CANCELLED->value]);
         return ResponseBuilder::asSuccess()
             ->withData(['order' => $order])
             ->withMessage('Order cancelled successfully.')

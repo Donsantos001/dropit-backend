@@ -14,25 +14,24 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->uuid('user_id')->nullable();
+            $table->unsignedBigInteger('recipient_id');
+            $table->unsignedBigInteger('pickup_location_id');
+            $table->unsignedBigInteger('delivery_location_id');
+
             $table->string('item_name');
-
-
-            // Receiver details
-            $table->string('receiver_firstname');
-            $table->string('receiver_lastname');
-            $table->string('receiver_phone_no');
-            $table->string('receiver_email');
-            $table->string('delivery_address');
-
-            $table->string('pickup_address');
-
-            $table->string('status')->default('pending');
-            $table->string('payment_method');
             $table->string('preferred_vehicle');
+            $table->string('status')->default('created');
             $table->string('schedule_type')->default('now');
             $table->timestamp('schedule_time')->nullable()->default(now());
+
+            $table->string('payment_method')->default('card');
+            $table->decimal('price');
+            $table->boolean('paid')->default(false);
             $table->timestamps();
-            
+
+            $table->foreign('recipient_id')->references('id')->on('recipients')->onDelete('set null');
+            $table->foreign('pickup_location_id')->references('id')->on('locations')->onDelete('set null');
+            $table->foreign('delivery_location_id')->references('id')->on('locations')->onDelete('set null');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
