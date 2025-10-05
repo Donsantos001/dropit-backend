@@ -65,4 +65,4 @@ RUN if [ ! -f .env ]; then \
 EXPOSE 9000 80
 
 # Start supervisor to manage processes
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]gi
