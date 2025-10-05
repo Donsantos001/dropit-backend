@@ -45,4 +45,20 @@ class Shipment extends Model
     {
         return $this->hasMany(ShipmentRequest::class, 'shipment_id');
     }
+
+    /**
+     * Get the current location associated with this.
+     */
+    public function current_location(): BelongsTo
+    {
+        return $this->belongsTo(Location::class, 'current_location_id');
+    }
+
+    /**
+     * Get the stop location associated with this.
+     */
+    public function stop_location(): BelongsTo
+    {
+        return $this->belongsTo(Location::class, 'stop_location_id');
+    }
 }

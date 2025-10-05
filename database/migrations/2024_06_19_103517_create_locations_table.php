@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('address');
             $table->string('state');
             $table->string('country');
+            $table->string('type')->nullable(); // pickup, delivery, current
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

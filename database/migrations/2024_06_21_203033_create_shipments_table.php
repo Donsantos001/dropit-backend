@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->uuid('agent_id')->nullable();
             $table->unsignedBigInteger('order_id')->nullable();
-            $table->unsignedBigInteger('current_location_id');
+            $table->unsignedBigInteger('current_location_id')->nullable();
             $table->unsignedBigInteger('stop_location_id')->nullable();
 
             $table->timestamp('estimated_delivery_time')->nullable();

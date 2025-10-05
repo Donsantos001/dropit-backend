@@ -30,6 +30,8 @@ class AgentRequestController extends Controller
     public function __construct(AgentRequest $agent_request, User $user, Shipment $shipment)
     {
         $this->user = $user;
+        $this->agent_request = $agent_request;
+        $this->shipment = $shipment;
     }
 
     /**

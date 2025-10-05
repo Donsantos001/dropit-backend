@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use MarcinOrlowski\ResponseBuilder\ResponseBuilder;
 
 class UserController extends Controller
 {
@@ -13,7 +14,9 @@ class UserController extends Controller
      */
     public function user(Request $request)
     {
-        return response()->json($request->user());
+        return ResponseBuilder::asSuccess()
+            ->withData(['user' => $request->user()])
+            ->build();
     }
 
     /**
@@ -23,7 +26,10 @@ class UserController extends Controller
      */
     public function referred_users(Request $request)
     {
-        return response()->json($request->user()->referrals);
+        $referrals = $request->user()->referrals;
+        return ResponseBuilder::asSuccess()
+            ->withData(['referrals' => $referrals])
+            ->build();
     }
     /**
      * Get the user who referred
@@ -32,6 +38,8 @@ class UserController extends Controller
      */
     public function referrer(Request $request)
     {
-        return response()->json($request->user()->referrer);
+        return ResponseBuilder::asSuccess()
+            ->withData(['referrer' => $request->user()->referrer])
+            ->build();
     }
 }

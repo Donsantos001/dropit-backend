@@ -14,11 +14,13 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->uuid('user_id')->nullable();
-            $table->unsignedBigInteger('recipient_id');
-            $table->unsignedBigInteger('pickup_location_id');
-            $table->unsignedBigInteger('delivery_location_id');
+            $table->unsignedBigInteger('recipient_id')->nullable();
+            $table->unsignedBigInteger('pickup_location_id')->nullable();
+            $table->unsignedBigInteger('delivery_location_id')->nullable();
 
             $table->string('item_name');
+            $table->decimal('item_weight');
+            $table->string('item_description')->nullable();
             $table->string('preferred_vehicle');
             $table->string('status')->default('created');
             $table->string('schedule_type')->default('now');
