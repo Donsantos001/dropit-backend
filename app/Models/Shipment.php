@@ -39,14 +39,6 @@ class Shipment extends Model
     }
 
     /**
-     * Get the requests on this.
-     */
-    public function requests(): HasMany
-    {
-        return $this->hasMany(ShipmentRequest::class, 'shipment_id');
-    }
-
-    /**
      * Get the current location associated with this.
      */
     public function current_location(): BelongsTo

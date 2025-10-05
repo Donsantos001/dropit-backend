@@ -10,7 +10,9 @@ use App\Models\Order;
 use App\Models\OrderRequest;
 use App\Models\Shipment;
 use App\Models\User;
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use MarcinOrlowski\ResponseBuilder\ResponseBuilder;
 
 class OrderRequestController extends Controller
@@ -18,6 +20,9 @@ class OrderRequestController extends Controller
     protected User $user;
     protected OrderRequest $order_request;
     protected Shipment $shipment;
+    protected Order $order;
+    protected AgentRequest $agent_request;
+    protected ConnectionInterface $db;
 
     /**
      * Inject the User model into the controller.
@@ -25,10 +30,17 @@ class OrderRequestController extends Controller
      * @param User $user
      * @param AgentRequest $agent_request
      * @param Shipment $shipment
+     * @param Order $order
+     * @param OrderRequest $order_request
      */
-    public function __construct(OrderRequest $order_request, User $user, Shipment $shipment)
+    public function __construct(ConnectionInterface $db, OrderRequest $order_request, User $user, Shipment $shipment, Order $order, AgentRequest $agent_request)
     {
         $this->user = $user;
+        $this->order_request = $order_request;
+        $this->shipment = $shipment;
+        $this->order = $order;
+        $this->agent_request = $agent_request;
+        $this->db = $db;
     }
 
     /**
@@ -40,6 +52,24 @@ class OrderRequestController extends Controller
     {
         $user = $request->user();
         $order_requests = $user->order_requests()->with('order')->get();
+        return ResponseBuilder::asSuccess()
+            ->withData(['requests' => $order_requests])
+            ->build();
+    }
+
+    /**
+     * get my order requests (on my order)
+     * 
+     * @return [json] agent request object list
+     */
+    public function my_order_requests(Request $request)
+    {
+        $user = $request->user();
+        // $order_requests = OrderRequest::whereHas('order', function ($query) use ($user) {
+        //     $query->where('user_id', $user->id);
+        // })->with('order')->get();
+        $order_requests = $user->orders()->with('order_requests')->get()->pluck('order_requests')->flatten();
+
         return ResponseBuilder::asSuccess()
             ->withData(['requests' => $order_requests])
             ->build();
@@ -58,7 +88,7 @@ class OrderRequestController extends Controller
                 ->build();
         }
 
-        if (!in_array($order->status, [OrderStatus::CREATED, OrderStatus::OPEN])) {
+        if (!in_array($order->status, [OrderStatus::CREATED->value, OrderStatus::OPEN->value])) {
             return ResponseBuilder::asError(400)
                 ->withMessage('You can only request for created or open orders')
                 ->build();
@@ -82,6 +112,7 @@ class OrderRequestController extends Controller
 
         return ResponseBuilder::asSuccess()
             ->withMessage('Order request created successfully')
+            ->withData(['request' => $order_request])
             ->build();
     }
 
@@ -92,41 +123,36 @@ class OrderRequestController extends Controller
      */
     public function update_order_request(Request $request, OrderRequest $order_request)
     {
-        if ($order_request->user_id !== $request->user()->id) {
+        if ($order_request->user_id === $request->user()->id) {
             return ResponseBuilder::asError(403)
-                ->withMessage('You are not authorized to update this order request')
-                ->build();
+            ->withMessage('You are not authorized to update this order request')
+            ->build();
         }
-        if ($order_request->status !== RequestStatus::REQUESTED) {
+        if ($order_request->status !== RequestStatus::REQUESTED->value) {
             return ResponseBuilder::asError(400)
-                ->withMessage('You can only update requested order requests')
-                ->build();
+            ->withMessage('You can only update requested order requests')
+            ->build();
         }
-
-        if (!in_array($request->status, [RequestStatus::ACCEPTED, RequestStatus::REJECTED])) {
+        
+        if (!in_array($request->status, [RequestStatus::ACCEPTED->value, RequestStatus::REJECTED->value])) {
             return ResponseBuilder::asError(400)
-                ->withMessage('Invalid status')
-                ->build();
+            ->withMessage('Invalid status')
+            ->build();
         }
+        $this->db->beginTransaction();
         $order_request->status = $request->status;
         $order_request->save();
 
-        if ($order_request->status === RequestStatus::ACCEPTED) {
-            $all_order_requests = OrderRequest::where('order_id', $order_request->order_id)
-                ->where('id', '!=', $order_request->id)->get();
-            $all_agent_requests = AgentRequest::where('order_id', $order_request->order_id)
-                ->get();
-            foreach ($all_order_requests as $request) {
-                $request->status = RequestStatus::CLOSED;
-            }
-            foreach ($all_agent_requests as $request) {
-                $request->status = RequestStatus::CLOSED;
-            }
-            $all_order_requests->saveAll();
-            $all_agent_requests->saveAll();
+        if ($order_request->status === RequestStatus::ACCEPTED->value) {
+            OrderRequest::where('order_id', $order_request->order_id)
+                ->where('id', '!=', $order_request->id)
+                ->update(['status' => RequestStatus::CLOSED->value]);
+
+            AgentRequest::where('order_id', $order_request->order_id)
+                ->update(['status' => RequestStatus::CLOSED->value]);
 
 
-            if (in_array($order_request->order->status, [OrderStatus::CREATED, OrderStatus::OPEN])) {
+            if (in_array($order_request->order->status, [OrderStatus::CREATED->value, OrderStatus::OPEN->value])) {
                 $order_request->order->status = OrderStatus::PROGRESS;
                 $order_request->order->save();
             }
@@ -145,8 +171,33 @@ class OrderRequestController extends Controller
             $order_request->order->status = OrderStatus::PROGRESS;
             $order_request->order->save();
         }
+        $this->db->commit();
         return ResponseBuilder::asSuccess()
             ->withMessage('Order request updated successfully')
+            ->build();
+    }
+
+    /**
+     * close an order request
+     * 
+     * @return [json] order request object
+     */
+    public function close_order_request(Request $request, OrderRequest $order_request)
+    {
+        if ($order_request->user_id !== $request->user()->id) {
+            return ResponseBuilder::asError(403)
+                ->withMessage('You are not authorized to close this order request')
+                ->build();
+        }
+        if ($order_request->status !== RequestStatus::REQUESTED->value) {
+            return ResponseBuilder::asError(400)
+                ->withMessage('You can only close requested order requests')
+                ->build();
+        }
+        $order_request->status = RequestStatus::CLOSED;
+        $order_request->save();
+        return ResponseBuilder::asSuccess()
+            ->withMessage('Order request closed successfully')
             ->build();
     }
 }

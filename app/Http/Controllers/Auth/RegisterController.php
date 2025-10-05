@@ -47,9 +47,9 @@ class RegisterController extends Controller
         $this->db->beginTransaction();
 
         $referral_code = $this->generateReferralCode();
-        $referredby = null;
+        $referred_by = null;
         if ($request->referred_by) {
-            $referredby = User::where('referral_code', $request->referred_by)->first()->id;
+            $referred_by = User::where('referral_code', $request->referred_by)->first()->id;
         }
 
 

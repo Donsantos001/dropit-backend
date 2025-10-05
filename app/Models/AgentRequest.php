@@ -14,6 +14,9 @@ class AgentRequest extends Model
      *
      * @var array<int, string>
      */
+    protected $fillable = [
+        'status'
+    ];
 
 
     /**

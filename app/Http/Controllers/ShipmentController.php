@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Enums\ShipmentStatus;
 use App\Http\Requests\LocationStoreRequest;
 use App\Models\Shipment;
-use App\Models\ShipmentRequest;
 use Illuminate\Http\Request;
 use MarcinOrlowski\ResponseBuilder\ResponseBuilder;
 
@@ -32,7 +31,7 @@ class ShipmentController extends Controller
     public function shipment_list(Request $request)
     {
         $user = $request->user();
-        $shipments = $user->shipments()->with('order')->get();
+        $shipments = $user->order_shipments()->with('order')->get();
 
         return ResponseBuilder::asSuccess()
             ->withData(['shipments' => $shipments])
@@ -44,12 +43,12 @@ class ShipmentController extends Controller
      */
     public function view_shipment(Request $request, Shipment $shipment)
     {
-        if ($shipment->agent_id !== $request->user()->id) {
+        if ($shipment->agent_id !== $request->user()->id && $shipment->order->user_id !== $request->user()->id) {
             return ResponseBuilder::asError(403)
                 ->withMessage('You are not authorized to view this shipment')
                 ->build();
         }
-        $shipment->load(['agent', 'order', 'requests']);
+        $shipment->load(['agent', 'order', 'current_location', 'order.user', 'order.recipient']);
 
         return ResponseBuilder::asSuccess()
             ->withData(['shipment' => $shipment])

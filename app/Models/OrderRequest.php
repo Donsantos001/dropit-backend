@@ -15,6 +15,9 @@ class OrderRequest extends Model
      *
      * @var array<int, string>
      */
+    protected $fillable = [
+        'status'
+    ];
 
     /**
      * Get the order that owns this.

@@ -29,7 +29,7 @@ class LocationController extends Controller
      */
     public function get_location(Request $request)
     {
-        $location = $request->user()->location->first();
+        $location = $request->user()->locations()->where('type', 'current')->first();
 
         return ResponseBuilder::asSuccess()
             ->withData(['location' => $location])
@@ -46,6 +46,9 @@ class LocationController extends Controller
         $location = new $this->location();
         $location->user_id = $user->id;
         $location->type = $request->type ?? LocationType::CURRENT->value;
+        if (!$request->type) {
+            $user->locations()->where('type', LocationType::CURRENT->value)->delete();
+        }
         $location->latitude = $request->latitude;
         $location->longitude = $request->longitude;
         $location->address = $request->address;
@@ -64,10 +67,11 @@ class LocationController extends Controller
      * 
      * @return [json] location object
      */
-    public function update_location(LocationStoreRequest $request, Location $location)
+    public function update_current_location(LocationStoreRequest $request, Location $location)
     {
+
         $user = $request->user();
-        $location = $user->location->first();
+        $location = $user->locations->first();
         if (!$location) {
             $location = new $this->location();
             $location->user_id = $user->id;

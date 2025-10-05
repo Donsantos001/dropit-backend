@@ -48,38 +48,30 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::post('order/{order}/invalidate', [OrderController::class, 'cancel']);
 
     // order request
-    Route::get('order/request', [OrderRequestController::class, 'order_request_list']);
-    Route::post('order/{order}/request', [OrderRequestController::class, 'create_order_request']);
-    Route::post('order/request/{order_request}/update', [OrderRequestController::class, 'update_order_request']);
+    Route::get('order-request', [OrderRequestController::class, 'order_request_list']);
+    Route::get('order-request/mine', [OrderRequestController::class, 'my_order_requests']);
+    Route::post('order-request/{order}', [OrderRequestController::class, 'create_order_request']);
+    Route::put('order-request/{order_request}/update', [OrderRequestController::class, 'update_order_request']);
+    Route::put('order-request/{order_request}/close', [OrderRequestController::class, 'close_order_request']);
 
     // agent request
-    Route::get('agent/request', [AgentRequestController::class, 'agent_request_list']);
-    Route::post('agent/{agent}/order/{order}/request', [AgentRequestController::class, 'create_agent_request']);
-    Route::post('agent/request/{agent_request}/update', [AgentRequestController::class, 'update_agent_request']);
+    Route::get('agent-request', [AgentRequestController::class, 'agent_request_list']);
+    Route::get('agent-request/mine', [AgentRequestController::class, 'my_agent_requests']);
+    Route::post('agent-request/{agent}/order/{order}', [AgentRequestController::class, 'create_agent_request']);
+    Route::put('agent-request/{agent_request}/update', [AgentRequestController::class, 'update_agent_request']);
+    Route::put('agent-request/{agent_request}/close', [AgentRequestController::class, 'close_agent_request']);
 
     // location
     Route::get('location', [LocationController::class, 'get_location']);
     Route::post('location', [LocationController::class, 'store_location']);
-    Route::post('location/{location}', [LocationController::class, 'update_current_location']);
+    Route::put('location/{location}', [LocationController::class, 'update_current_location']);
 
     // shipment
     Route::get('shipment', [ShipmentController::class, 'shipment_list']);
     Route::get('shipment/{shipment}', [ShipmentController::class, 'view_shipment']);
-    Route::post('shipment/{shipment}/updatelocation', [ShipmentController::class, 'update_location']);
-    Route::post('shipment/{shipment}/updatestatus', [ShipmentController::class, 'shipment_status']);
+    Route::put('shipment/{shipment}/update-location', [ShipmentController::class, 'update_location']);
+    Route::put('shipment/{shipment}/update-status', [ShipmentController::class, 'shipment_status']);
 
-
-    // as customer
-    // Route::post('shipment/acceptagent', [ShipmentController::class, 'accept_agent']);
-    // Route::post('shipment/acceptrequest', [ShipmentRequestController::class, 'accept_request']);
-    // Route::get('shipment/inrequest', [ShipmentRequestController::class, 'in_request_list']);
-
-    // as agent
-    // Route::get('shipment', [ShipmentController::class, 'shipment_list']);
-    // Route::post('updateshipment', [ShipmentController::class, 'shipment_status']);
-    // Route::get('pendingshipment', [ShipmentController::class, 'open_shipments']);
-    // Route::get('shipment/outrequest', [ShipmentRequestController::class, 'out_request_list']);
-    // Route::post('shipment/outrequest', [ShipmentRequestController::class, 'request']);
 });
 
 Route::get('/test', function (Request $request) {

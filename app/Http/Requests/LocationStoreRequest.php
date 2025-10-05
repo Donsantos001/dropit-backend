@@ -29,7 +29,7 @@ class LocationStoreRequest extends FormRequest
             'address' => 'required|string',
             'state' => 'required|string',
             'country' => 'required|string',
-            'type' => 'nullable|string|in:' . LocationType::CURRENT . ',' . LocationType::DESTINATION,
+            'type' => 'sometimes|string|in:' . LocationType::CURRENT->value . ',' . LocationType::DESTINATION->value,
         ];
     }
 }

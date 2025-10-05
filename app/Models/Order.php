@@ -42,12 +42,21 @@ class Order extends Model
     }
 
     /**
-     * Get the shipment attached this.
+     * Get the shipments attached this.
      */
-    public function shipment(): HasOne
+    public function shipments(): HasMany
     {
-        return $this->hasOne(Shipment::class, 'order_id');
+        return $this->hasMany(Shipment::class, 'order_id');
     }
+
+    /**
+     * Get the recipient associated with this.
+     */
+    public function recipient(): BelongsTo
+    {
+        return $this->belongsTo(Recipient::class, 'recipient_id');
+    }
+
 
     /**
      * Get the agent requested on this.
@@ -55,5 +64,13 @@ class Order extends Model
     public function agent_requests(): HasMany
     {
         return $this->hasMany(AgentRequest::class, 'order_id');
+    }
+
+    /**
+     * Get the order requests on this.
+     */
+    public function order_requests(): HasMany
+    {
+        return $this->hasMany(OrderRequest::class, 'order_id');
     }
 }

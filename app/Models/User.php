@@ -79,11 +79,19 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the users orders.
+     * Get the users shipments as agent.
      */
     public function shipments(): HasMany
     {
         return $this->hasMany(Shipment::class, 'agent_id');
+    }
+
+    /**
+     * Get all of the shipments for the user that placed the order.
+     */
+    public function order_shipments()
+    {
+        return $this->hasManyThrough(Shipment::class, Order::class);
     }
 
     /**
@@ -92,14 +100,6 @@ class User extends Authenticatable
     public function recipients(): HasMany
     {
         return $this->hasMany(Recipient::class, 'user_id');
-    }
-
-    /**
-     * Get the users orders.
-     */
-    public function shipment_requests(): HasMany
-    {
-        return $this->hasMany(ShipmentRequest::class, 'agent_id');
     }
 
     /**
