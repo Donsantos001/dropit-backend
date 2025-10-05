@@ -20,11 +20,11 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('referral_code')->nullable();
-            $table->uuid('referred_by')->nullable();
+            // $table->uuid('referred_by')->nullable();
             $table->rememberToken();
             $table->timestamps();
 
-            $table->foreign('referred_by')->references('id')->on('users')->onDelete('set null');
+            // $table->foreign('referred_by')->references('id')->on('users')->onDelete('set null');
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
