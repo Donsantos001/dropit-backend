@@ -22,7 +22,7 @@ trait Verification
     public function createOTP(Request $request)
     {
         // $otp = rand(100000, 999999);
-        $otp = 111111;
+        $otp = 1111;
 
         // Send otp through remote service
         Mail::to('santosdboss@gmail.com')->send(new VerificationMail($otp));
