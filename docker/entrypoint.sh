@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 echo "Composer installing"
 if [ ! -f "vendor/autoload.php" ]; then
     composer install --no-progress --no-interaction
@@ -13,11 +12,8 @@ else
     echo "env file exists."
 fi
 
-# composer global require hirak/prestissimo
-# composer install --no-dev --working-dir=/var/www/html
-
 echo "Migrating"
-yes | php artisan migrate
+php artisan migrate --force
 
 echo "Generating key"
 php artisan key:generate
@@ -28,5 +24,4 @@ php artisan config:clear
 php artisan route:clear
 
 echo "Starting server"
-php artisan serve --port=$PORT --host=0.0.0.0 --env=.env
-# exec docker-php-entrypoint "$@"
+php artisan serve --host=0.0.0.0 --port=8000 --env=.env

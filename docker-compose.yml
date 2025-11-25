@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dropit-backend:local
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: dropit
+      DB_USERNAME: postgres
+      DB_PASSWORD: secret
+    volumes:
+      - ./:/var/www/html:cached
+      - dropit_app_vendor:/var/www/html/vendor
+      - dropit_app_storage:/var/www/html/storage
+    networks:
+      - dropit_net
+    command: ["bash", "-lc", "chmod +x /var/www/html/docker/entrypoint.sh 2>/dev/null || true && /var/www/html/docker/entrypoint.sh"]
+
+  db:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: dropit
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - dropit_db_data:/var/lib/postgresql
+    networks:
+      - dropit_net
+
+volumes:
+  dropit_db_data:
+  dropit_app_vendor:
+  dropit_app_storage:
+
+networks:
+  dropit_net:
+    driver: bridge

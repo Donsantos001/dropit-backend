@@ -82,6 +82,12 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->withData($exception->validator->getMessageBag()->getMessages())
                 ->build();
         });
+        $exceptions->renderable(function (ValidationException $exception) {
+            return ResponseBuilder::asError(ApiErrorCode::SOMETHING_WENT_WRONG->value)
+                ->withHttpCode(Response::HTTP_INTERNAL_SERVER_ERROR)
+                ->withMessage($exception->getMessage())
+                ->build();
+        });
 
         $exceptions->renderable(function (HttpException $e) {
             return ResponseBuilder::asError($e->getStatusCode())

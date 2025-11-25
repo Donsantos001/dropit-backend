@@ -14,6 +14,14 @@ ENV APP_ENV production
 ENV APP_DEBUG false
 ENV LOG_CHANNEL stderr
 
+# Database config
+ENV DB_CONNECTION pgsql
+ENV DB_HOST db
+ENV DB_PORT 5432
+ENV DB_DATABASE dropit
+ENV DB_USERNAME postgres
+ENV DB_PASSWORD secret
+
 # Allow composer to run as root
 ENV COMPOSER_ALLOW_SUPERUSER 1
 
