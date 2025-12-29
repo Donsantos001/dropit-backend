@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\OrderController;
@@ -29,6 +30,10 @@ Route::group(['prefix' => 'auth'], function () {
     Route::post('register', [RegisterController::class, 'register']);
     Route::post('sendotp', [RegisterController::class, 'sendOTP']);
     Route::post('verifyotp', [RegisterController::class, 'verifyOTP']);
+
+    // password reset
+    Route::post('password/forgot', [PasswordResetController::class, 'sendResetOTP']);
+    Route::post('password/reset', [PasswordResetController::class, 'reset']);
 
     Route::group(['middleware' => 'auth:sanctum'], function () {
         Route::post('logout', [LogoutController::class, 'logout']);
@@ -71,7 +76,6 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('shipment/{shipment}', [ShipmentController::class, 'view_shipment']);
     Route::put('shipment/{shipment}/update-location', [ShipmentController::class, 'update_location']);
     Route::put('shipment/{shipment}/update-status', [ShipmentController::class, 'shipment_status']);
-
 });
 
 Route::get('/test', function (Request $request) {
