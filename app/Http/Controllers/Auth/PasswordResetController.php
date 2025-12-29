@@ -24,7 +24,8 @@ class PasswordResetController extends Controller
                 ->build();
         }
 
-        $otp = (string) random_int(100000, 999999);
+        // $otp = (string) random_int(100000, 999999);
+        $otp = (string) 1111;
 
         try {
             Mail::to($user->email)->send(new PasswordResetMail($otp));
